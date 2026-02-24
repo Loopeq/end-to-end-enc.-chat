@@ -1,16 +1,13 @@
-[project]
-name = "soccer-flow"
+[tool.poetry]
+name = "end-to-end-encrypt-chat"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "mirzaev.arsen",email = "mirzaev.a@cadesign.ru"}
-]
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-    "fastapi (>=0.129.2,<0.130.0)"
-]
+authors = ["mirzaev.arsen <mirzaev.a@cadesign.ru>"]
+package-mode = false
 
+[tool.poetry.dependencies]
+python = ">=3.10"
+fastapi = "^0.129.2"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
