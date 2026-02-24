@@ -1,0 +1,26 @@
+services:
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    volumes:
+      - ../backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    volumes:
+      - ../frontend:/app
+      - /app/node-modules
+    ports:
+      - "5137:5137"
+    depends_on:
+      - backend
+    restart: unless-stopped
