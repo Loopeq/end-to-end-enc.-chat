@@ -1,19 +1,15 @@
 <script setup lang="ts">
+import ChatWindow from './components/ChatWindow.vue'
+import MessageInput from './components/MessageInput.vue'
+import LoginWindow from './components/LoginWindow.vue';
 
-interface User {
-  name: string
-  email: string
-}
-
-const commonUser: User = {
-  name: 'Hello World',
-  email: 'admin@gmail.com'
-}
 </script>
 
 <template>
-  <div>{{ commonUser.name }}</div>
+  <div id="app">
+    <h1>Encrypted Chat</h1>
+    <LoginWindow />
+    <ChatWindow />
+    <MessageInput />
+  </div>
 </template>
-
-<style scoped>
-</style>
