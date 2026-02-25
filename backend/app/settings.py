@@ -7,7 +7,11 @@ class Settings(BaseSettings):
     postgres_user: str
     postgres_password: str
     postgres_db: str
-
+    redis_host: str
+    redis_port: str
+    redis_db: str
+    redis_password: str
+    
     access_token_expire_minutes: int
     secret_key: str
     
