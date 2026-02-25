@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { User } from "../type";
 
 const emit = defineEmits<{
@@ -15,6 +14,6 @@ const props = defineProps<{
 <template>
   <div>
     {{ user.username }}
-    <button @click="emit('logout')">logout</button>
+    <button @click="emit('logout')">Выйти</button>
   </div>
 </template>

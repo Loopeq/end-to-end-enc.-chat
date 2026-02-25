@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "axios": "^1.13.5",
-    "vue": "^3.5.25"
+    "vue": "^3.5.25",
+    "vue3-emoji-picker": "^1.1.8"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.2",

@@ -10,27 +10,41 @@ import ProfileWindow from './components/ProfileWindow.vue';
 const user = ref<User | null>(null)
 const messages = ref<Message[]>([])
 
-let connection: WebSocket | null = null
+let ws: WebSocket | null = null;
+let reconnectAttempts = 0;
 
 const send = (message: string) => { 
-  console.log(message)
-  if (connection && connection.readyState === WebSocket.OPEN) {
-    connection.send(message)
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(message)
   }
 }
 
 const connectWS = () => {
-  connection = new WebSocket("ws://localhost:8000/api/ws")
-
-  connection.onopen = () => console.log("WS connected")
-  
-  connection.onmessage = (e) => {
-    messages.value.push(JSON.parse(e.data))
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+    return;
   }
 
-  connection.onclose = () => console.log("WS closed")
-  connection.onerror = (err) => console.error("WS error", err)
-}
+  ws = new WebSocket("ws://localhost:8000/api/ws");
+
+  ws.onopen = () => {
+    reconnectAttempts = 0;
+  };
+
+  ws.onmessage = (e) => {
+    messages.value.push(JSON.parse(e.data));
+  };
+
+  ws.onclose = () => {
+    const timeout = Math.min(30000, Math.pow(2, reconnectAttempts) * 500);
+    reconnectAttempts++;
+    setTimeout(connectWS, timeout);
+  };
+
+  ws.onerror = (err) => {
+    console.error("WS error", err);
+    ws?.close();
+  };
+};
 
 const login = async (payload: User) => { 
   const response = await api.post("/api/login", payload)
@@ -48,7 +62,7 @@ const logout = async () => {
   await api.post("/api/logout", {withCredentials: true})
   user.value = null;
   messages.value = [];
-  connection?.close()
+  ws?.close()
 }
 
 
@@ -60,7 +74,6 @@ onMounted(async() => {
 
 <template>
   <div id="app">
-    <h1>Encrypted Chat</h1>
     <LoginWindow v-if="!user" @login="login"/>
     <ProfileWindow v-else :user="user" @logout="logout"/>
     <ChatWindow :messages="messages"/>
