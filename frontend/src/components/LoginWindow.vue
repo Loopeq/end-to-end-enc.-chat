@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useAuth } from "../services/useAuth";
+import { User } from "../type";
 
-const { user, login, error } = useAuth();
+const emit = defineEmits<{
+ (e: "login", payload: User): void
+}>()
+
 const username = ref("");
 const password = ref("");
 
 const submit = async () => {
-  const ok = await login(username.value, password.value);
-  if (ok) alert(`Welcome ${user.value?.username}`);
-  else alert(`Error: ${error.value}`);
+  emit('login', {
+    username: username.value, 
+    password: password.value
+  })
 };
 </script>
 

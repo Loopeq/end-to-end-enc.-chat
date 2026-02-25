@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 from app.settings import get_settings
-from hashlib import sha256
 from pwdlib import PasswordHash
 
+algorithm = 'HS256'
 settings = get_settings()
-
 pwd_hasher = PasswordHash.recommended()
 
 def hash_password(password: str) -> str:
@@ -20,4 +19,7 @@ def create_access_token(data: dict, expires_delta: int = None) -> str:
         minutes=expires_delta or settings.access_token_expire_minutes
     )
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.secret_key, algorithm="HS256")
+    return jwt.encode(to_encode, settings.secret_key, algorithm=algorithm)
+
+def decode_access_token(token: str):
+    return jwt.decode(token, settings.secret_key, algorithms=algorithm)

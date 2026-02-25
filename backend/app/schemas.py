@@ -5,7 +5,6 @@ class UserAuth(BaseModel):
     password: str
 
 class UserRead(BaseModel):
-    id: int
     username: str
 
     class Config:
