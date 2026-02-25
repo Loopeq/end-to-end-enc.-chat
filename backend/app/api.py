@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSocket
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas import UserAuth, UserRead
 from app.security import decode_access_token
 from app.crud import login_or_register, get_db
 from app.models import User
+from app.broadcast import manager
 
 router = APIRouter(prefix="/api")
 
@@ -18,7 +19,7 @@ async def login(
 
     if not result:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
+    
     token = result["token"]
 
     response.set_cookie(
@@ -44,6 +45,38 @@ async def logout(response: Response):
 
 @router.get('/me', response_model=UserRead)
 async def me(request: Request, session: AsyncSession = Depends(get_db)):
-    sub = decode_access_token(request.cookies.get('access_token'))['sub']
+    token = request.cookies.get('access_token')
+    if not token:
+        raise HTTPException(400, 'Not authorized')
+    sub = decode_access_token(token).get('sub', None)
+    if not sub:
+        raise HTTPException(400, 'Not authorized')
     user = await session.scalar(select(User).where(User.username == sub))
+    if not user: 
+        raise HTTPException(400, 'Not authorized')
     return user
+
+@router.websocket("/ws")
+async def ws_connection(websocket: WebSocket, session: AsyncSession = Depends(get_db)):
+    token = websocket.cookies.get('access_token')
+    if not token:
+        raise HTTPException(400, 'Not authorized')
+    sub = decode_access_token(token).get('sub', None)
+    if not sub:
+        raise HTTPException(400, 'Not authorized')
+    user = await session.scalar(select(User).where(User.username == sub))
+    if not user: 
+        raise HTTPException(400, 'Not authorized')
+    
+    await manager.connect(user.username, websocket)
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            payload = {
+                'username': user.username,
+                'message': data
+            }
+            await manager.broadcast(payload)
+    except:
+        manager.disconnect(user.username)

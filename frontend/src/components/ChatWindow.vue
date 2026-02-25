@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { Message } from '../type';
 
-const messages = ref<{ id: string; sender: string; text: string }[]>([])
+defineProps<{
+    messages: Message[]
+}>()
 </script>
 
 <template>
 <div class="chat-window">
     <div
-    v-for="msg in messages"
-    :key="msg.id"
-    :class="['message', msg.sender === 'User' ? 'outgoing' : 'incoming']"
+        v-for="(msg, index) in messages"
+        :key="index"
     >
-    <strong v-if="msg.sender !== 'User'">{{ msg.sender }}: </strong>{{ msg.text }}
+        <strong>{{ msg.username }}: </strong>
+        <span>{{ msg.message }}</span>
     </div>
 </div>
 </template>
