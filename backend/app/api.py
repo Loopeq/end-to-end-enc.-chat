@@ -6,6 +6,7 @@ from app.security import decode_access_token
 from app.crud import login_or_register, get_db
 from app.models import User
 from app.broadcast import manager
+import json
 
 router = APIRouter(prefix="/api")
 
@@ -72,11 +73,25 @@ async def ws_connection(websocket: WebSocket, session: AsyncSession = Depends(ge
 
     try:
         while True:
-            data = await websocket.receive_text()
-            payload = {
-                'username': user.username,
-                'message': data
-            }
-            await manager.broadcast(payload)
+            raw = await websocket.receive_text()
+            data = json.loads(raw)
+
+            msg_type = data.get("type")
+
+            if msg_type == "ping":
+                await websocket.send_json({"type": "pong"})
+                continue
+
+            if msg_type == "chat_message":
+                text = data.get("message", "")
+
+                payload = {
+                    "type": "chat_message",
+                    "username": user.username,
+                    "message": text,
+                }
+
+                await manager.broadcast(payload)
     except:
         manager.disconnect(user.username)
+        await manager.broadcast_offline(user.username)

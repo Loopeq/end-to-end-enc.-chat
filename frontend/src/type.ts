@@ -9,3 +9,7 @@ export interface Message {
     username: string
     message: string
 }
+
+export interface Online { 
+    username: string
+}

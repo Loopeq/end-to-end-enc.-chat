@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-<div class="chat-window">
+<div>
     <div
         v-for="(msg, index) in messages"
         :key="index"
@@ -17,7 +17,3 @@ defineProps<{
     </div>
 </div>
 </template>
-  
-<style lang="scss" scoped>
-
-</style>

@@ -16,7 +16,9 @@ fileConfig(config.config_file_name)
 target_metadata = Base.metadata
 
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.database_url)
+sync_db_url = settings.database_url.replace("+asyncpg", "")
+
+config.set_main_option("sqlalchemy.url", sync_db_url)
 
 def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
