@@ -61,20 +61,20 @@ onUnmounted(() => {
   
 <style scoped>
 .message-input{ 
+    height: 30px;
     width: 100%;
     position: relative;
     display: flex;
+    flex-shrink: 0;
 }
 
 .message-input-field{
     width: 100%;
-    height: 20px;
 }
 
 .message-input-emoji{
     position: absolute;
-    bottom: 100;
+    bottom: 40px;
     right: 0;
-    transform: translate(-50%, -100%);
 }
 </style>

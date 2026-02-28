@@ -86,11 +86,9 @@ onMounted(async() => {
 
       <main class="chat-area">
         <div class="chat-area-layout">
-          <div class="messages-wrapper">
-            <ChatWindow :messages="messages" />
-          </div>
-          <MessageInput @send="send" />
+          <ChatWindow :messages="messages" :username="user.username" />
         </div>
+        <MessageInput @send="send" />
       </main>
 
     </div>
@@ -98,16 +96,18 @@ onMounted(async() => {
 </template>
 
 <style scoped>
-.layout {
-  max-height: calc(100vh - 100px) ;
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .chat-layout {
-  height: 100vh;
   display: grid;
 
   grid-template-columns: 260px 1fr;
-  grid-template-rows: 60px 1fr 60px;
+  grid-template-rows: 60px 1fr;
 
   grid-template-areas:
     "profile profile"
@@ -122,11 +122,9 @@ onMounted(async() => {
 .chat-list-area {
   grid-area: chatlist;
   border-right: 1px solid #ccc;
-  overflow-y: auto;
 }
 
 .chat-area {
-  grid-area: chat;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -135,12 +133,7 @@ onMounted(async() => {
 .chat-area-layout {
   display: flex;
   flex-direction: column;
-  height: 100%;
-}
-
-.messages-wrapper {
-  flex: 1;
-  overflow-y: auto;
+  height: calc(100vh - 150px);
 }
 
 </style>

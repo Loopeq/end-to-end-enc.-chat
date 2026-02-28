@@ -78,6 +78,6 @@ async def saveMessage(db: AsyncSession, message: str, user_id: int):
     return msg
 
 async def getMessages(db: AsyncSession):
-    stmt = select(Message).options(selectinload(Message.user)).order_by(Message.created_at.desc()).limit(50)
+    stmt = select(Message).options(selectinload(Message.user)).order_by(Message.created_at.asc()).limit(50)
     result = await db.execute(stmt)
     return result.scalars().all()
