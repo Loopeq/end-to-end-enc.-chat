@@ -22,9 +22,17 @@ const {
 } = useWebSocket()
 
 const login = async (payload: User) => {
-  const response = await api.post("/api/login", payload)
-  user.value = response.data
-  connect()
+  try {
+    const response = await api.post("/api/login", payload)
+    user.value = response.data
+    connect()
+  } catch (err) { 
+    if (err.response && err.response.data) {
+      alert(err.response.data.detail)
+    } else {
+      console.error(err)
+    }
+  }
 }
 
 const userme = async () => {
@@ -37,6 +45,17 @@ const userme = async () => {
   }
 }
 
+const getMessages = async () => {
+  try {
+    const response = await api.get("/api/messages", { withCredentials: true })
+    messages.value = response.data
+    connect()
+  } catch {
+    messages.value = []
+  }
+}
+
+
 const logout = async () => {
   await api.post("/api/logout", {}, { withCredentials: true })
 
@@ -47,6 +66,7 @@ const logout = async () => {
 
 onMounted(async() => {
   await userme() 
+  await getMessages()
 })
 </script>
 

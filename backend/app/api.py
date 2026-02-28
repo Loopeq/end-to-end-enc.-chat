@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas import UserAuth, UserRead
 from app.security import decode_access_token
-from app.crud import login_or_register, get_db
+from app.crud import getMessages, login_or_register, get_db, saveMessage
 from app.models import User
 from app.broadcast import manager
 import json
@@ -14,9 +14,9 @@ router = APIRouter(prefix="/api")
 async def login(
     user: UserAuth,
     response: Response,
-    session: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    result = await login_or_register(session, user)
+    result = await login_or_register(db, user)
 
     if not result:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -44,28 +44,39 @@ async def logout(response: Response):
     )
     return True
 
+@router.get('/messages')
+async def messages(db: AsyncSession = Depends(get_db)):
+    messages = await getMessages(db=db)
+    return [
+        {
+            'message': msg.content,
+            'username': msg.user.username
+        } 
+        for msg in messages
+    ]
+
 @router.get('/me', response_model=UserRead)
-async def me(request: Request, session: AsyncSession = Depends(get_db)):
+async def me(request: Request, db: AsyncSession = Depends(get_db)):
     token = request.cookies.get('access_token')
     if not token:
         raise HTTPException(400, 'Not authorized')
     sub = decode_access_token(token).get('sub', None)
     if not sub:
         raise HTTPException(400, 'Not authorized')
-    user = await session.scalar(select(User).where(User.username == sub))
+    user = await db.scalar(select(User).where(User.username == sub))
     if not user: 
         raise HTTPException(400, 'Not authorized')
     return user
 
 @router.websocket("/ws")
-async def ws_connection(websocket: WebSocket, session: AsyncSession = Depends(get_db)):
+async def ws_connection(websocket: WebSocket, db: AsyncSession = Depends(get_db)):
     token = websocket.cookies.get('access_token')
     if not token:
         raise HTTPException(400, 'Not authorized')
     sub = decode_access_token(token).get('sub', None)
     if not sub:
         raise HTTPException(400, 'Not authorized')
-    user = await session.scalar(select(User).where(User.username == sub))
+    user = await db.scalar(select(User).where(User.username == sub))
     if not user: 
         raise HTTPException(400, 'Not authorized')
     
@@ -84,11 +95,11 @@ async def ws_connection(websocket: WebSocket, session: AsyncSession = Depends(ge
 
             if msg_type == "chat_message":
                 text = data.get("message", "")
-
+                msg = await saveMessage(db=db, message=text, user_id=user.id)
                 payload = {
                     "type": "chat_message",
-                    "username": user.username,
-                    "message": text,
+                    "username": msg.user.username,
+                    "message": msg.content,
                 }
 
                 await manager.broadcast(payload)
