@@ -10,9 +10,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession,
 )
-from sqlalchemy.orm import selectinload
 from app.settings import get_settings
-from app.models import Message
 
 settings = get_settings()
 
@@ -67,17 +65,21 @@ async def login_or_register(db: AsyncSession, user: UserAuth):
     
     return {"user": db_user, "token": token}
 
-async def saveMessage(db: AsyncSession, message: str, user_id: int):
-    msg = Message(
-        user_id=user_id,
-        content=message
-    )
-    db.add(msg)
-    await db.commit()
-    await db.refresh(msg)
-    return msg
+async def load_conversation(db: AsyncSession, users_ids: list[int]):
+    users = users.sort(key=lambda x, y: x > y)
 
-async def getMessages(db: AsyncSession):
-    stmt = select(Message).options(selectinload(Message.user)).order_by(Message.created_at.asc()).limit(50)
-    result = await db.execute(stmt)
-    return result.scalars().all()
+
+# async def saveMessage(db: AsyncSession, message: str, user_id: int):
+#     msg = Message(
+#         user_id=user_id,
+#         content=message
+#     )
+#     db.add(msg)
+#     await db.commit()
+#     await db.refresh(msg)
+#     return msg
+
+# async def getMessages(db: AsyncSession):
+#     stmt = select(Message).options(selectinload(Message.user)).order_by(Message.created_at.asc()).limit(50)
+#     result = await db.execute(stmt)
+#     return result.scalars().all()

@@ -7,24 +7,32 @@ class ConnectionManager:
 
     async def connect(self, user: str, websocket: WebSocket):
         await websocket.accept()
+
+        old = self.connections.get(user)
+        if old:
+            await old.close()
+
         self.connections[user] = websocket
 
-        await websocket.send_json({
-            'type': 'online_list',
-            'users': list(self.connections.keys())
+        await self.broadcast({
+            'type': 'user_online', 
+            'username': user 
         })
 
-        await self.broadcast({
-            'type': 'user_online',
-            'username': user
-        })
-    
     def disconnect(self, user: str):
         self.connections.pop(user, None)
-    
+
     async def broadcast(self, payload: dict):
-        for socket in self.connections.values():
-            await socket.send_json(payload)
+        dead = []
+
+        for user, socket in list(self.connections.items()):
+            try:
+                await socket.send_json(payload)
+            except Exception:
+                dead.append(user)
+
+        for user in dead:
+            self.disconnect(user)
 
     async def broadcast_offline(self, user: str):
         await self.broadcast({

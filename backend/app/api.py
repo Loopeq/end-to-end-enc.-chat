@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSocket
+from fastapi import APIRouter, Depends, HTTPException, Response, WebSocket
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas import UserAuth, UserRead
 from app.security import decode_access_token
-from app.crud import getMessages, login_or_register, get_db, saveMessage
+from app.crud import login_or_register, get_db
+from app.di import current_user
 from app.models import User
 from app.broadcast import manager
 import json
@@ -46,27 +47,19 @@ async def logout(response: Response):
 
 @router.get('/messages')
 async def messages(db: AsyncSession = Depends(get_db)):
-    messages = await getMessages(db=db)
-    return [
-        {
-            'message': msg.content,
-            'username': msg.user.username
-        } 
-        for msg in messages
-    ]
+    # messages = await getMessages(db=db)
+    # return [
+    #     {
+    #         'message': msg.content,
+    #         'username': msg.user.username
+    #     } 
+    #     for msg in messages
+    # ]
+    return []
 
 @router.get('/me', response_model=UserRead)
-async def me(request: Request, db: AsyncSession = Depends(get_db)):
-    token = request.cookies.get('access_token')
-    if not token:
-        raise HTTPException(400, 'Not authorized')
-    sub = decode_access_token(token).get('sub', None)
-    if not sub:
-        raise HTTPException(400, 'Not authorized')
-    user = await db.scalar(select(User).where(User.username == sub))
-    if not user: 
-        raise HTTPException(400, 'Not authorized')
-    return user
+async def me(current_user: User = Depends(current_user)):
+    return current_user
 
 @router.websocket("/ws")
 async def ws_connection(websocket: WebSocket, db: AsyncSession = Depends(get_db)):
@@ -82,6 +75,11 @@ async def ws_connection(websocket: WebSocket, db: AsyncSession = Depends(get_db)
     
     await manager.connect(user.username, websocket)
 
+    await websocket.send_json({
+        "type": "online_list",
+        "users": list(manager.connections.keys())
+    })
+
     try:
         while True:
             raw = await websocket.receive_text()
@@ -95,11 +93,11 @@ async def ws_connection(websocket: WebSocket, db: AsyncSession = Depends(get_db)
 
             if msg_type == "chat_message":
                 text = data.get("message", "")
-                msg = await saveMessage(db=db, message=text, user_id=user.id)
+                # msg = await saveMessage(db=db, message=text, user_id=user.id)
                 payload = {
                     "type": "chat_message",
-                    "username": msg.user.username,
-                    "message": msg.content,
+                    "username": 'admin',
+                    "message": text,
                 }
 
                 await manager.broadcast(payload)
