@@ -1,10 +1,9 @@
 import { ref } from "vue";
-import { Message, Online } from "../type";
+import { Message, User } from "../type";
 
 const messages = ref<Message[]>([]);
-const online = ref<Online[]>([]);
+const online = ref<User[]>([]);
 const isConnected = ref(false);
-
 
 
 let ws: WebSocket | null = null;
@@ -49,14 +48,12 @@ const connect = () => {
           break
       
         case "user_online":
-          if (!online.value.includes(data.username)) {
-            online.value.push(data.username)
-          }
+          online.value.push(data.user)
           break
     
         case "user_offline":
           online.value =
-            online.value.filter(u => u !== data.username)
+            online.value.filter(u => u.id !== data.user.id)
           break
       }
     } catch {
@@ -90,6 +87,15 @@ const send = (message: string) => {
   );
 };
 
+const sendHandshake = (partner_id: string) => {
+  ws?.send(
+    JSON.stringify({
+      type: "handshake",
+      partner_id: partner_id,
+    })
+  );
+};
+
 const disconnect = () => {
   manuallyClosed = true;
 
@@ -114,6 +120,7 @@ export function useWebSocket() {
     connect,
     disconnect,
     send,
+    sendHandshake,
     clearMessages,
   };
 }

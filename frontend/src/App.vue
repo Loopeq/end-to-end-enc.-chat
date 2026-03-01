@@ -6,7 +6,7 @@ import ProfileWindow from './components/ProfileWindow.vue'
 
 import api from './services/api'
 import { onMounted, ref } from 'vue'
-import { User } from './type'
+import { Conversation, User, UserAuth } from './type'
 import { useWebSocket } from './services/ws'
 import OnlineWindow from './components/OnlineWindow.vue'
 
@@ -18,10 +18,11 @@ const {
   connect,
   disconnect,
   send,
+  sendHandshake,
   clearMessages
 } = useWebSocket()
 
-const login = async (payload: User) => {
+const login = async (payload: UserAuth) => {
   try {
     const response = await api.post("/api/login", payload)
     user.value = response.data
@@ -81,12 +82,12 @@ onMounted(async() => {
       </header>
 
       <aside class="chat-list-area">
-        <OnlineWindow :online="online" :username="user.username"/>
+        <OnlineWindow :online="online" :username="user.username"  @handshake="sendHandshake"/>
       </aside>
 
       <main class="chat-area">
         <div class="chat-area-layout">
-          <ChatWindow :messages="messages" :username="user.username" />
+          <ChatWindow :messages="messages" :username="user.username"/>
         </div>
         <MessageInput @send="send" />
       </main>

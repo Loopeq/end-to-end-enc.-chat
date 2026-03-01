@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { User } from "../type";
+import { UserAuth } from "../type";
 
 const emit = defineEmits<{
- (e: "login", payload: User): void
+ (e: "login", payload: UserAuth): void
 }>()
 
 const username = ref("");

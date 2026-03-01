@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { User } from '../type';
 
 
 const props = defineProps<{
-    online: string[]
+    online: User[]
     username: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'handshake', userId: string): void
 }>()
 
 const sortedOnline = computed(() => {
     return [...props.online].sort((a, b) => {
-        if (a === props.username) return -1
-        if (b === props.username) return 1
+        if (a.username === props.username) return -1
+        if (b.username === props.username) return 1
         return 0
     })
 })
@@ -22,11 +27,12 @@ const sortedOnline = computed(() => {
     Сейчас онлайн
     <div
         class="online-list"
-        v-for="(msg, index) in sortedOnline"
+        v-for="(user, index) in sortedOnline"
+        @click="emit('handshake', user.id)"
         :key="index"
-        :class="{ 'online-list-userme': msg === username}"
+        :class="{ 'online-list-userme': user.username === username}"
     >
-        <span class="online-list-dot">🟢</span><span class="online-list-username">{{ msg }}</span>
+        <span class="online-list-dot">🟢</span><span class="online-list-username">{{ user.username }}</span>
     </div>
 </div>
 </template>

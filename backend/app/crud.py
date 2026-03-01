@@ -1,8 +1,10 @@
+from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.settings import get_settings
 from app.models import User
-from app.schemas import UserAuth
+from app.schemas import UserAuth, ConversationDTO
 from app.security import hash_password, verify_password, create_access_token
 
 from sqlalchemy.ext.asyncio import (
@@ -12,6 +14,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from app.settings import get_settings
 from app.models import Conversation
+from app.models import to_pydantic
 
 settings = get_settings()
 
@@ -66,18 +69,20 @@ async def login_or_register(db: AsyncSession, user: UserAuth):
     
     return {"user": db_user, "token": token}
 
-async def load_conversation(db: AsyncSession, user_ids: list[int]):
+async def load_conversation(db: AsyncSession, user_ids: list[UUID]):
     user1_id, user2_id = sorted(user_ids)
-    conversation =  await db.scalars(
-        select(Conversation).where(Conversation.user1_id == user1_id,
-                                   Conversation.user2_id == user2_id)
+    conversation = await db.scalar(
+        select(Conversation)
+        .where(Conversation.user1_id == user1_id, Conversation.user2_id == user2_id)
+        .options(selectinload(Conversation.user1), selectinload(Conversation.user2), selectinload(Conversation.messages))
     )
     if not conversation:
         conversation = Conversation(user1_id=user1_id, user2_id=user2_id)
         db.add(conversation)
         await db.commit()
         await db.refresh(conversation)
-    return conversation
+    conversation_dto = to_pydantic(conversation, ConversationDTO)
+    return conversation_dto.model_dump(mode='json')
 
 
 # async def saveMessage(db: AsyncSession, message: str, user_id: int):

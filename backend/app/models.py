@@ -1,9 +1,15 @@
+from typing import Type
 import uuid
+from pydantic import BaseModel
 from sqlalchemy import Column, DateTime, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
+
+
+def to_pydantic(obj, model: Type[BaseModel]):
+    return model.model_validate(obj)
 
 class UUIDMixin:
     id = Column(
