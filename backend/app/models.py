@@ -43,11 +43,24 @@ class Conversation(Base):
     user1 = relationship("User", foreign_keys=[user1_id])
     user2 = relationship("User", foreign_keys=[user2_id])
 
+    messages = relationship(
+        "Message",
+        back_populates="conversation",
+        cascade="all, delete-orphan"
+    )
+
 
 class Message(Base):
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, index=True)
+
+    conversation_id = Column(
+        Integer,
+        ForeignKey("conversations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
 
     user_id = Column(
         Integer,
@@ -68,4 +81,8 @@ class Message(Base):
     )
 
     user = relationship("User", backref="messages")
-    
+
+    conversation = relationship(
+        "Conversation",
+        back_populates="messages"
+    )

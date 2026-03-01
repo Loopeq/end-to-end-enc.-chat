@@ -8,6 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 load_dotenv(os.path.join(sys.path[0], "backend/.env"))
 from app.models import Base
+from app.models import User
 from app.settings import get_settings
 
 config = context.config
