@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Online } from '../type';
+import { computed } from 'vue';
 
-defineProps<{
-    online: Online[]
+
+const props = defineProps<{
+    online: string[]
+    username: string
 }>()
 
-const text = ref('')
-
-const send = () => {
-    console.log(text.value)
-}
+const sortedOnline = computed(() => {
+    return [...props.online].sort((a, b) => {
+        if (a === props.username) return -1
+        if (b === props.username) return 1
+        return 0
+    })
+})
 
 </script>
 
@@ -19,10 +22,11 @@ const send = () => {
     Сейчас онлайн
     <div
         class="online-list"
-        v-for="(msg, index) in online"
+        v-for="(msg, index) in sortedOnline"
         :key="index"
+        :class="{ 'online-list-userme': msg === username}"
     >
-        <span class="online-list-dot">🟢</span><span> {{ msg }}</span>
+        <span class="online-list-dot">🟢</span><span class="online-list-username">{{ msg }}</span>
     </div>
 </div>
 </template>
@@ -35,4 +39,14 @@ const send = () => {
     font-size: 10px;
     margin-right: 5px;
 }
+
+.online-list-userme::after{
+    content: 'Вы'
+}
+
+.online-list-userme .online-list-username { 
+    display: none;
+}
+
+
 </style>

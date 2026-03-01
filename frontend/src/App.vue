@@ -81,7 +81,7 @@ onMounted(async() => {
       </header>
 
       <aside class="chat-list-area">
-        <OnlineWindow :online="online"/>
+        <OnlineWindow :online="online" :username="user.username"/>
       </aside>
 
       <main class="chat-area">
