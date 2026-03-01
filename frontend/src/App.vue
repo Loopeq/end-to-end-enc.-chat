@@ -100,18 +100,18 @@ html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
 }
 
 .chat-layout {
   display: grid;
+  height: calc(100vh - 50px);
 
   grid-template-columns: 260px 1fr;
   grid-template-rows: 60px 1fr;
 
   grid-template-areas:
     "profile profile"
-    "chatlist chat"
+    "chatlist chat";
 }
 
 .profile-area {
@@ -122,18 +122,36 @@ html, body, #app {
 .chat-list-area {
   grid-area: chatlist;
   border-right: 1px solid #ccc;
+  overflow-y: auto;
 }
 
 .chat-area {
+  grid-area: chat;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  overflow: hidden;
 }
 
 .chat-area-layout {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 150px);
+  overflow: hidden;
 }
 
+@media (max-width: 768px) {
+
+.chat-layout {
+  grid-template-columns: 1fr;
+  grid-template-rows: 60px 1fr;
+
+  grid-template-areas:
+    "profile"
+    "chat";
+}
+
+.chat-list-area {
+  display: none;
+}
+}
 </style>
