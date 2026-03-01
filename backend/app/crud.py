@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 from app.settings import get_settings
+from app.models import Conversation
 
 settings = get_settings()
 
@@ -65,8 +66,18 @@ async def login_or_register(db: AsyncSession, user: UserAuth):
     
     return {"user": db_user, "token": token}
 
-async def load_conversation(db: AsyncSession, users_ids: list[int]):
-    users = users.sort(key=lambda x, y: x > y)
+async def load_conversation(db: AsyncSession, user_ids: list[int]):
+    user1_id, user2_id = sorted(user_ids)
+    conversation =  await db.scalars(
+        select(Conversation).where(Conversation.user1_id == user1_id,
+                                   Conversation.user2_id == user2_id)
+    )
+    if not conversation:
+        conversation = Conversation(user1_id=user1_id, user2_id=user2_id)
+        db.add(conversation)
+        await db.commit()
+        await db.refresh(conversation)
+    return conversation
 
 
 # async def saveMessage(db: AsyncSession, message: str, user_id: int):

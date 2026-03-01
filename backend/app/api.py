@@ -1,17 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, WebSocket
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas import UserAuth, UserRead
+from app.schemas import UserAuth, UserDTO
 from app.security import decode_access_token
 from app.crud import login_or_register, get_db
 from app.di import current_user
 from app.models import User
 from app.broadcast import manager
 import json
+from app.schemas import UserDTO
 
 router = APIRouter(prefix="/api")
 
-@router.post("/login", response_model=UserRead)
+@router.post("/login", response_model=UserDTO)
 async def login(
     user: UserAuth,
     response: Response,
@@ -32,7 +33,8 @@ async def login(
         max_age=60 * 60 * 24,
     )
 
-    return UserRead(
+    return UserDTO(
+        id=result['user'].id,
         username=result["user"].username,
     )
 
@@ -57,7 +59,7 @@ async def messages(db: AsyncSession = Depends(get_db)):
     # ]
     return []
 
-@router.get('/me', response_model=UserRead)
+@router.get('/me', response_model=UserDTO)
 async def me(current_user: User = Depends(current_user)):
     return current_user
 
