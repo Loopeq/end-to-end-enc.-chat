@@ -8,13 +8,14 @@ export interface User extends UserAuth {
     id: string
 }
 
-export interface Conversation { 
-    user1_id: User['id']
-    user2_id: User['id']
+export interface Conversation {
+    id: string 
+    partner: User
 }
 
 export interface Message {
-    username: string
     message: string
+    to?: string
+    from?: string
 }
 

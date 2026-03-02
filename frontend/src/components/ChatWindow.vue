@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onUpdated, ref } from 'vue';
-import { Message } from '../type';
+import { Conversation, Message } from '../type';
 
 defineProps<{
     messages: Message[]
-    username: string
+    conversation: Conversation | null
+    me_id: string
 }>()
 
 const chatContainer = ref<HTMLElement | null>(null);
@@ -18,15 +19,16 @@ onUpdated(() => {
 </script>
 
 <template>
+<div v-if="conversation" class="chat-window-partner">{{ conversation.partner.username }}</div>
+<div v-else>Выберите собеседника слева</div>
 <div class="chat-window" ref="chatContainer">
     <div
         v-for="(msg, index) in messages"
         :key="index"
-        :class="{ 'chat-window-userme': msg.username === username,
-                  'chat-window-other': msg.username !== username
+        :class="{ 'chat-window-userme': msg.from === me_id,
+                  'chat-window-other': msg.from !== me_id
          }"
         >
-        <strong v-if="msg.username !== username">{{ msg.username }}: </strong>
         <span>{{ msg.message }}</span>
     </div>
 </div>
@@ -36,10 +38,16 @@ onUpdated(() => {
 <style>
 
 .chat-window {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: auto;
+  padding: 10px;
+}
+
+.chat-window-partner { 
+  width: 100%;
   padding: 10px;
 }
 

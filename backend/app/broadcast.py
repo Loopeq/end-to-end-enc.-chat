@@ -42,6 +42,13 @@ class ConnectionManager:
 
         for user_id in dead:
             self.disconnect(user_id)
+    
+    async def send_to(self, _to: UUID, payload: dict):
+        try:
+            await self.connections[_to]['websocket'].send_json(payload)
+        except Exception as e:
+            print(e)
+            self.disconnect(_to)
 
     async def broadcast_offline(self, user: User):
         await self.broadcast({

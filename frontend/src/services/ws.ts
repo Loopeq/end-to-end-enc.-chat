@@ -1,8 +1,9 @@
 import { ref } from "vue";
-import { Message, User } from "../type";
+import { Conversation, Message, User } from "../type";
 
 const messages = ref<Message[]>([]);
 const online = ref<User[]>([]);
+const conversation = ref<Conversation | null>(null)
 const isConnected = ref(false);
 
 
@@ -40,7 +41,15 @@ const connect = () => {
       switch (data.type) {
 
         case "chat_message":
-          messages.value.push(data)
+          if (conversation.value) { 
+            messages.value.push(data)
+          }
+          break
+        
+        case "chat_messages":
+          if (conversation.value) { 
+            messages.value = data['messages']
+          }
           break
       
         case "online_list":
@@ -50,7 +59,11 @@ const connect = () => {
         case "user_online":
           online.value.push(data.user)
           break
-    
+
+        case "handshake":
+          conversation.value = data.conversation
+          break
+
         case "user_offline":
           online.value =
             online.value.filter(u => u.id !== data.user.id)
@@ -82,7 +95,9 @@ const send = (message: string) => {
   ws?.send(
     JSON.stringify({
       type: "chat_message",
-      message,
+      conversation_id: conversation.value?.id,
+      to: conversation.value?.partner.id,
+      message: message,
     })
   );
 };
@@ -116,6 +131,7 @@ export function useWebSocket() {
   return {
     messages,
     online,
+    conversation,
     isConnected,
     connect,
     disconnect,

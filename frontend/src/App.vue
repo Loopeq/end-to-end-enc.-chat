@@ -6,7 +6,7 @@ import ProfileWindow from './components/ProfileWindow.vue'
 
 import api from './services/api'
 import { onMounted, ref } from 'vue'
-import { Conversation, User, UserAuth } from './type'
+import {  User, UserAuth } from './type'
 import { useWebSocket } from './services/ws'
 import OnlineWindow from './components/OnlineWindow.vue'
 
@@ -15,6 +15,7 @@ const user = ref<User | null>(null)
 const {
   messages,
   online,
+  conversation,
   connect,
   disconnect,
   send,
@@ -46,17 +47,6 @@ const userme = async () => {
   }
 }
 
-const getMessages = async () => {
-  try {
-    const response = await api.get("/api/messages", { withCredentials: true })
-    messages.value = response.data
-    connect()
-  } catch {
-    messages.value = []
-  }
-}
-
-
 const logout = async () => {
   await api.post("/api/logout", {}, { withCredentials: true })
 
@@ -67,8 +57,8 @@ const logout = async () => {
 
 onMounted(async() => {
   await userme() 
-  await getMessages()
 })
+
 </script>
 
 <template>
@@ -87,9 +77,12 @@ onMounted(async() => {
 
       <main class="chat-area">
         <div class="chat-area-layout">
-          <ChatWindow :messages="messages" :username="user.username"/>
+          <ChatWindow 
+            :messages="messages" 
+            :me_id="user.id" 
+            :conversation="conversation"/>
         </div>
-        <MessageInput @send="send" />
+        <MessageInput :disabled="!conversation" @send="send" />
       </main>
 
     </div>

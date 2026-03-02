@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas import UserAuth, UserDTO
 from app.security import decode_access_token
-from app.crud import load_conversation, login_or_register, get_db
+from app.crud import get_messages, load_conversation, login_or_register, get_db, save_message
 from app.di import current_user
 from app.models import User
 from app.broadcast import manager
@@ -52,10 +52,6 @@ async def logout(response: Response):
     )
     return True
 
-@router.get('/messages')
-async def messages(db: AsyncSession = Depends(get_db)):
-    return []
-
 @router.websocket("/ws")
 async def ws_connection(websocket: WebSocket, db: AsyncSession = Depends(get_db)):
     token = websocket.cookies.get('access_token')
@@ -91,21 +87,29 @@ async def ws_connection(websocket: WebSocket, db: AsyncSession = Depends(get_db)
                 case 'handshake':
                     try:
                         partner_id = data.get('partner_id', None)
-                        conversation = await load_conversation(db=db, user_ids=[UUID(partner_id), user.id])
+                        conversation = await load_conversation(db=db, partner_id=partner_id, user_id=user.id)
                         await websocket.send_json({"type": "handshake", 
                                                    'conversation': conversation})
-
+                        messages = await get_messages(db=db, conversation_id=conversation['id'])
+                        await websocket.send_json({"type": "chat_messages", 
+                                                   'messages': messages})
                     except Exception as e: 
                         print(e)
-            # if msg_type == "chat_message":
-            #     text = data.get("message", "")
-            #     payload = {
-            #         "type": "chat_message",
-            #         "username": 'admin',
-            #         "message": text,
-            #     }
+            if msg_type == "chat_message":
+                text = data.get("message", "")
+                _conversation_id = data.get("conversation_id", None)
+                _to = data.get('to', None)
+                _from = user.id
+                payload = {
+                    "type": "chat_message",
+                    "to": str(_to),
+                    "from": str(_from),
+                    "message": text,
+                }
+                await manager.send_to(_to=_from, payload=payload)
+                await manager.send_to(_to=UUID(_to), payload=payload)
+                await save_message(db=db, message=text, user_id=_from, conversation_id=_conversation_id)
 
-            #     await manager.broadcast(payload)
     except Exception:
         manager.disconnect(user.id)
         await manager.broadcast_offline(user)

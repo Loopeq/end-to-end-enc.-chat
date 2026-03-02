@@ -2,6 +2,10 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import EmojiPicker from 'vue3-emoji-picker'
 
+defineProps<{
+    disabled: boolean
+}>()
+
 const emit = defineEmits<{
  (e: "send", text: string): void
 }>()
@@ -47,7 +51,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="message-input">
+    <div v-if="!disabled" class="message-input">
         <input v-model="text" @keyup.enter="send" placeholder="Печатать сообщение" class="message-input-field" />
         <button @click="send">Отправить</button>
         <button @click.stop="openEmoji">
